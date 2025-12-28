@@ -42,9 +42,14 @@ DATABASE_SCHEMA = """CREATE TABLE allocs (
 def message_callback(message: str):
     """Callback that updates GUI via thread-safe method"""
     global app_instance
+
+    # On macOS, if GUI isn't running, print to console
     if app_instance:
         # Use after() for thread-safe UI updates
         app_instance.root.after(0, app_instance.update_message, message)
+    else:
+        # Fallback to console output (used on macOS)
+        print(f"\n[Viewer Message]\n{message}\n")
 
 
 class MessagePanel(ttk.Frame):
@@ -566,26 +571,17 @@ def main():
         print("The REPL interface is available for SQL queries.\n")
         run_gui(args)
     elif is_macos:
-        print("macOS detected - running GUI on main thread")
-        print("\n" + "="*70)
-        print("IMPORTANT: macOS Threading Limitation")
-        print("="*70)
-        print("The 3D viewer will attempt to start but will likely fail because:")
-        print("• Both tkinter (GUI) and winit (3D viewer) require the main thread")
-        print("• macOS only allows one to use the main thread at a time")
-        print("\nRecommendation: Use --no-viewer flag to skip the 3D viewer:")
-        print("  python gui.py --no-viewer -d <directory>")
-        print("\nThe REPL interface will remain fully functional for SQL queries.")
-        print("="*70)
-        print()
+        print("macOS detected - running VIEWER on main thread")
+        print("\nNote: On macOS, the tkinter GUI panels cannot be displayed due to")
+        print("threading limitations. The 3D viewer (main feature) will run normally.")
+        print("\nMessages will be printed to console instead of the GUI panel.")
+        print("You can still interact with the 3D viewer window normally.\n")
 
-        # On macOS: tkinter MUST run on main thread
-        # Start viewer in background thread (will likely fail)
-        viewer_thread = threading.Thread(target=run_viewer, daemon=True)
-        viewer_thread.start()
+        # On macOS: VIEWER gets the main thread (it's the main feature!)
+        # Messages go to console instead of GUI
 
-        # Run GUI on main thread (blocking)
-        run_gui(args)
+        # Run viewer in main thread (blocking infinite loop)
+        run_viewer()
     else:
         # On Windows/Linux: Run viewer on main thread, GUI in background
         # Start GUI in a separate thread

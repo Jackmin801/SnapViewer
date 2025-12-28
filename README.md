@@ -48,15 +48,15 @@ A PyTorch memory snapshot viewer alternative to https://docs.pytorch.org/memory_
 
 ### macOS Compatibility
 On macOS, there are threading limitations due to the windowing system requirements:
-- **GUI Panel**: The tkinter GUI (REPL and message panels) works correctly on macOS
-- **3D Viewer Window**: The 3D memory visualization window **cannot run** due to macOS requiring both the GUI framework (tkinter) and the graphics library (winit) to use the main thread simultaneously
-- **Recommended Usage**: Use the `--no-viewer` flag to skip 3D viewer initialization:
+- **3D Viewer Window**: ✅ Works normally! The main visualization feature runs on the main thread.
+- **GUI Panels**: ❌ The tkinter panels (REPL and messages) cannot be displayed because both tkinter and the graphics library require the main thread on macOS.
+- **Messages**: Allocation information is printed to the console instead of the GUI panel when you click in the viewer.
+- **Usage**: Run normally - the viewer (main feature) works fine:
   ```sh
-  python gui.py --no-viewer --log info -d <dir_to_your_snapshot>
+  python gui.py --log info --res 2400 1000 -d <dir_to_your_snapshot>
   ```
-- **REPL Functionality**: The SQL REPL interface remains fully functional for querying allocation data
 
-The application automatically detects macOS and provides clear error messages and recommendations.
+The application automatically detects macOS and routes messages to console output instead of GUI panels.
 
 ### Windows & Linux
 Both the GUI panel and 3D viewer window work normally on Windows and Linux platforms.
