@@ -538,6 +538,11 @@ def main():
         metavar=("WIDTH", "HEIGHT"),  # Help text for the arguments
         help="Specify resolution as two positive integers (WIDTH HEIGHT).",
     )
+    parser.add_argument(
+        "--no-viewer",
+        action="store_true",
+        help="Skip 3D viewer initialization (useful on macOS where viewer has threading limitations)",
+    )
 
     args = parser.parse_args()
 
@@ -555,13 +560,27 @@ def main():
     # Platform-specific threading model
     is_macos = platform.system() == "Darwin"
 
-    if is_macos:
-        print("macOS detected - running GUI on main thread, viewer in background thread")
-        print("Note: The 3D viewer window may not appear due to macOS threading restrictions")
-        print("The REPL interface will still be available for SQL queries.\n")
+    if args.no_viewer:
+        # User explicitly disabled viewer - run only GUI
+        print("Viewer disabled (--no-viewer flag). Running GUI only.")
+        print("The REPL interface is available for SQL queries.\n")
+        run_gui(args)
+    elif is_macos:
+        print("macOS detected - running GUI on main thread")
+        print("\n" + "="*70)
+        print("IMPORTANT: macOS Threading Limitation")
+        print("="*70)
+        print("The 3D viewer will attempt to start but will likely fail because:")
+        print("• Both tkinter (GUI) and winit (3D viewer) require the main thread")
+        print("• macOS only allows one to use the main thread at a time")
+        print("\nRecommendation: Use --no-viewer flag to skip the 3D viewer:")
+        print("  python gui.py --no-viewer -d <directory>")
+        print("\nThe REPL interface will remain fully functional for SQL queries.")
+        print("="*70)
+        print()
 
         # On macOS: tkinter MUST run on main thread
-        # Start viewer in background thread
+        # Start viewer in background thread (will likely fail)
         viewer_thread = threading.Thread(target=run_viewer, daemon=True)
         viewer_thread.start()
 

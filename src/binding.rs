@@ -102,6 +102,19 @@ impl SnapViewer {
     }
 
     fn viewer(&self, py: Python<'_>, callback: PyObject) -> PyResult<()> {
+        // Check if we're on macOS and warn about potential issues
+        #[cfg(target_os = "macos")]
+        {
+            eprintln!("\n{}", "=".repeat(70));
+            eprintln!("WARNING: macOS detected");
+            eprintln!("{}", "=".repeat(70));
+            eprintln!("The 3D viewer requires the main thread on macOS.");
+            eprintln!("Since tkinter is using the main thread, the viewer may fail.");
+            eprintln!("The REPL will remain available if the viewer fails.");
+            eprintln!("{}", "=".repeat(70));
+            eprintln!();
+        }
+
         println!(
             "Memory before initializing render loop: {} MiB",
             memory_usage()
@@ -149,17 +162,29 @@ impl SnapViewer {
             Ok(w) => w,
             Err(e) => {
                 eprintln!("\n{}", "=".repeat(70));
-                eprintln!("Failed to create viewer window: {}", e);
+                eprintln!("VIEWER INITIALIZATION FAILED");
+                eprintln!("{}", "=".repeat(70));
+                eprintln!("Error: {}", e);
                 #[cfg(target_os = "macos")]
                 {
-                    eprintln!("\nmacOS detected. This error often occurs because:");
-                    eprintln!("1. The windowing system requires main thread access");
-                    eprintln!("2. tkinter is also using the main thread");
-                    eprintln!("\nThe REPL interface is still available for SQL queries.");
-                    eprintln!("You can close this warning and use the REPL panel.");
+                    eprintln!("\nThis is a known limitation on macOS:");
+                    eprintln!("• Both the GUI (tkinter) and viewer (winit) require the main thread");
+                    eprintln!("• macOS only allows one window system to use the main thread");
+                    eprintln!("\n✓ The REPL interface is still fully functional for SQL queries");
+                    eprintln!("✓ Use the SQL REPL panel to query allocation data");
+                    eprintln!("\nConsider using --no-viewer flag to skip viewer initialization.");
+                }
+                #[cfg(not(target_os = "macos"))]
+                {
+                    eprintln!("\nUnexpected error creating viewer window.");
+                    eprintln!("Please report this issue.");
                 }
                 eprintln!("{}", "=".repeat(70));
-                panic!("{}", e);
+                eprintln!("\nViewer will not start, but REPL remains available.\n");
+
+                // Instead of panicking, just return early
+                // This allows the GUI to continue running
+                return;
             }
         };
         let context = window.gl();
