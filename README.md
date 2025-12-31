@@ -39,10 +39,27 @@ A PyTorch memory snapshot viewer alternative to https://docs.pytorch.org/memory_
   maturin dev -r
   ```
 - Specify resolution, log level and directory to your snapshot (which should have `allocations.json` and `elements.db`), and run the application.
-  - Tkinter application (tested on windows and linux)
+  - Tkinter application (tested on Windows, Linux, and macOS)
     ```sh
     python gui.py --log info --res 2400 1000 -d <dir_to_your_snapshot>
     ```
+
+## Platform Notes
+
+### macOS Compatibility
+On macOS, there are threading limitations due to the windowing system requirements:
+- **3D Viewer Window**: ✅ Works normally! The main visualization feature runs on the main thread.
+- **GUI Panels**: ❌ The tkinter panels (REPL and messages) cannot be displayed because both tkinter and the graphics library require the main thread on macOS.
+- **Messages**: Allocation information is printed to the console instead of the GUI panel when you click in the viewer.
+- **Usage**: Run normally - the viewer (main feature) works fine:
+  ```sh
+  python gui.py --log info --res 2400 1000 -d <dir_to_your_snapshot>
+  ```
+
+The application automatically detects macOS and routes messages to console output instead of GUI panels.
+
+### Windows & Linux
+Both the GUI panel and 3D viewer window work normally on Windows and Linux platforms.
 
 ## Notes
 - Minimal dependency is **not** a goal.

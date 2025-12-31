@@ -132,13 +132,24 @@ impl SnapViewer {
             "Memory before render loop init work: {} MiB",
             memory_usage()
         );
-        let window = Window::new(WindowSettings {
+
+        let window = match Window::new(WindowSettings {
             title: "SnapViewer".to_string(),
             min_size: rl.resolution,
             max_size: Some(rl.resolution),
             ..Default::default()
-        })
-        .unwrap();
+        }) {
+            Ok(w) => w,
+            Err(e) => {
+                eprintln!("\n{}", "=".repeat(70));
+                eprintln!("ERROR: Failed to create viewer window");
+                eprintln!("{}", "=".repeat(70));
+                eprintln!("{}", e);
+                eprintln!("\nPlease report this issue with your platform information.");
+                eprintln!("{}", "=".repeat(70));
+                panic!("{}", e);
+            }
+        };
         let context = window.gl();
 
         info!("Moving mesh to GPU...");
